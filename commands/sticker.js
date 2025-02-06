@@ -24,8 +24,8 @@ async function stickerCommand(sock, chatId, message) {
                 forwardingScore: 999,
                 isForwarded: true,
                 forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363161513685998@newsletter',
-                    newsletterName: 'KnightBot MD',
+                    newsletterJid: '120363397497383483@newsletter',
+                    newsletterName: 'ReviewPlus',
                     serverMessageId: -1
                 }
             }
@@ -46,8 +46,8 @@ async function stickerCommand(sock, chatId, message) {
                     forwardingScore: 999,
                     isForwarded: true,
                     forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363161513685998@newsletter',
-                        newsletterName: 'KnightBot MD',
+                        newsletterJid: 'ReviewPlus',
+                        newsletterName: 'ReviewPLus',
                         serverMessageId: -1
                     }
                 }
@@ -94,7 +94,7 @@ async function stickerCommand(sock, chatId, message) {
         // Create metadata
         const json = {
             'sticker-pack-id': crypto.randomBytes(32).toString('hex'),
-            'sticker-pack-name': settings.packname || 'KnightBot',
+            'sticker-pack-name': settings.packname || 'ReviewPlus',
             'sticker-pack-publisher': settings.author || '@bot',
             'emojis': ['🤖']
         };
@@ -132,8 +132,8 @@ async function stickerCommand(sock, chatId, message) {
                 forwardingScore: 999,
                 isForwarded: true,
                 forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363161513685998@newsletter',
-                    newsletterName: 'KnightBot MD',
+                    newsletterJid: '120363397497383483@newsletter',
+                    newsletterName: 'ReviewPlus',
                     serverMessageId: -1
                 }
             }
