@@ -83,7 +83,7 @@ const channelInfo = {
         forwardingScore: 999,
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
-            newsletterJid: 'https://whatsapp.com/channel/0029Vazg8JO9WtBvFt263F3E',
+            newsletterJid: '120363397497383483@newsletter',
             newsletterName: 'Reviewplus',
             serverMessageId: -1
         }
