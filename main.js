@@ -74,7 +74,7 @@ const { autoStatusCommand, handleStatusUpdate } = require('./commands/autostatus
 // Global settings
 global.packname = settings.packname;
 global.author = settings.author;
-global.channelLink = "https://chat.whatsapp.com/BcfTRGUaRxd6ekB4MaB5B3";
+global.channelLink = "https://whatsapp.com/channel/0029Vazg8JO9WtBvFt263F3E";
 global.ytch = "Abdul Khadher";
 
 // Add this near the top of main.js with other global configurations
@@ -83,7 +83,7 @@ const channelInfo = {
         forwardingScore: 999,
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
-            newsletterJid: 'https://chat.whatsapp.com/BcfTRGUaRxd6ekB4MaB5B3',
+            newsletterJid: 'https://whatsapp.com/channel/0029Vazg8JO9WtBvFt263F3E',
             newsletterName: 'Reviewplus',
             serverMessageId: -1
         }
