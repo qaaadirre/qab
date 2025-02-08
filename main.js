@@ -1,3 +1,18 @@
+// In your main bot file
+const { helpCommand, handleButtonResponse } = require('./commands/help');
+
+// Add this to your message handler
+sock.ev.on('messages.upsert', async ({ messages }) => {
+    const msg = messages[0];
+    
+    // Handle button responses
+    if (msg.messageStubType === 68) { // Button response
+        const buttonId = msg.messageStubParameters[0];
+        await handleButtonResponse(sock, msg.key.remoteJid, buttonId);
+    }
+    
+    // Your existing message handling code...
+});
 const settings = require('./settings');
 const { loadCommands } = require('./utils');
 require('./config.js');
