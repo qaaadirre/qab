@@ -59,7 +59,7 @@ Join our channel for updates:`;
                 footer: '© ReviewPlus Bot 2024',
                 buttons: buttons,
                 headerType: 1,
-                viewOnce: true
+                viewOnce: false
             });
         }
     } catch (error) {
