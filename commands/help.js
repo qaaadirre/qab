@@ -2,7 +2,7 @@ const settings = require('../settings');
 const fs = require('fs');
 const path = require('path');
 async function helpCommand(sock, chatId, channelLink) {
-    const helpMessage = '
+    const helpMessage = 
 ╔═══════════════════╗
    *${settings.botName || 'ReviewPlus'}*  
    Version: *${settings.version || '1.0.0'}*
@@ -18,7 +18,7 @@ async function helpCommand(sock, chatId, channelLink) {
 ║ ➤ .owner
 ║ ➤ .vv
 ╚═══════════════════╝
-Join our channel for updates:';
+Join our channel for updates:;
     try {
         const imagePath = path.join(__dirname, '../assets/bot_image.jpg');
 
