@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 async function helpCommand(sock, chatId, channelLink) {
+    // Message template with formatting
     const helpMessage = `
 ╔═══════════════════╗
    *${settings.botName || 'ReviewPlus'}*  
@@ -21,42 +22,105 @@ async function helpCommand(sock, chatId, channelLink) {
 ╚═══════════════════╝
 Join our channel for updates:`;
 
-    const buttons = [
-        {buttonId: 'groupinfo', buttonText: {displayText: '👥 GROUP INFO'}, type: 1},
-        {buttonId: 'commands', buttonText: {displayText: '📜 COMMANDS'}, type: 1},
-        {buttonId: 'owner', buttonText: {displayText: '👤 OWNER'}, type: 1}
-    ];
-
     try {
+        const sections = [
+            {
+                title: "Bot Commands",
+                rows: [
+                    {title: "All Commands", rowId: "list_commands", description: "View all available commands"},
+                    {title: "Owner Info", rowId: "owner_info", description: "Contact bot owner"},
+                    {title: "Group Rules", rowId: "group_rules", description: "View group guidelines"}
+                ]
+            }
+        ];
+
+        const listMessage = {
+            text: helpMessage,
+            footer: "© ReviewPlus Bot 2024",
+            title: "Bot Menu",
+            buttonText: "Click Here!",
+            sections,
+            // List message specific options
+            listType: 1
+        };
+
+        const templateButtons = [
+            {
+                index: 1,
+                quickReplyButton: {
+                    displayText: '👥 Group Info',
+                    id: 'group_info'
+                }
+            },
+            {
+                index: 2,
+                quickReplyButton: {
+                    displayText: '📜 Commands',
+                    id: 'commands'
+                }
+            },
+            {
+                index: 3,
+                quickReplyButton: {
+                    displayText: '👤 Owner',
+                    id: 'owner'
+                }
+            }
+        ];
+
         const imagePath = path.join(__dirname, '../assets/bot_image.jpg');
         
         if (fs.existsSync(imagePath)) {
             const imageBuffer = fs.readFileSync(imagePath);
-            
-            const buttonMessage = {
+
+            // First, send the image with template buttons
+            await sock.sendMessage(chatId, {
                 image: imageBuffer,
                 caption: helpMessage,
                 footer: '© ReviewPlus Bot 2024',
-                buttons: buttons,
-                headerType: 4
-            };
-            
-            await sock.sendMessage(chatId, buttonMessage);
+                templateButtons: templateButtons,
+                mimetype: 'image/jpeg'
+            });
+
+            // Then send the list message
+            await sock.sendMessage(chatId, listMessage);
         } else {
-            console.error('Bot image not found at:', imagePath);
-            const buttonMessage = {
+            // If no image, send both messages without image
+            await sock.sendMessage(chatId, {
                 text: helpMessage,
                 footer: '© ReviewPlus Bot 2024',
-                buttons: buttons,
-                headerType: 1
-            };
-            
-            await sock.sendMessage(chatId, buttonMessage);
+                templateButtons: templateButtons
+            });
+
+            await sock.sendMessage(chatId, listMessage);
         }
+
     } catch (error) {
         console.error('Error in help command:', error);
-        await sock.sendMessage(chatId, { text: helpMessage });
+        
+        // Fallback message without any buttons
+        await sock.sendMessage(chatId, { 
+            text: helpMessage + "\n\nNote: Interactive buttons are currently unavailable." 
+        });
     }
 }
 
-module.exports = helpCommand;
+// Button response handler
+async function handleButtonResponse(sock, chatId, selectedButtonId) {
+    const responses = {
+        'group_info': 'ℹ️ *Group Information*\nWelcome to our group! Here you can...',
+        'commands': '📜 *Available Commands*\nHere are all the commands you can use...',
+        'owner': '👤 *Owner Contact*\nYou can reach out to the owner at...',
+        'list_commands': '📋 *Detailed Command List*\nHere is a complete list of commands...',
+        'owner_info': '💌 *Owner Details*\nContact the owner for support...',
+        'group_rules': '📢 *Group Rules*\nPlease follow these guidelines...'
+    };
+
+    const response = responses[selectedButtonId] || 'Invalid button selection';
+    await sock.sendMessage(chatId, { text: response });
+}
+
+module.exports = {
+    helpCommand,
+    handleButtonResponse
+};
