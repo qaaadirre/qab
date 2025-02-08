@@ -21,11 +21,10 @@ async function helpCommand(sock, chatId, channelLink) {
 ╚═══════════════════╝
 Join our channel for updates:`;
 
-    // Template for buttons
-    const templateButtons = [
-        {index: 1, urlButton: {displayText: '👥 Group Info', url: 'https://chat.whatsapp.com/your-group-link'}},
-        {index: 2, callButton: {displayText: '📜 Commands', phoneNumber: '+1234567890'}},
-        {index: 3, quickReplyButton: {displayText: '👤 Owner', id: '.owner'}}
+    const buttons = [
+        {buttonId: 'groupinfo', buttonText: {displayText: '👥 GROUP INFO'}, type: 1},
+        {buttonId: 'commands', buttonText: {displayText: '📜 COMMANDS'}, type: 1},
+        {buttonId: 'owner', buttonText: {displayText: '👤 OWNER'}, type: 1}
     ];
 
     try {
@@ -34,23 +33,25 @@ Join our channel for updates:`;
         if (fs.existsSync(imagePath)) {
             const imageBuffer = fs.readFileSync(imagePath);
             
-            const templateMessage = {
+            const buttonMessage = {
                 image: imageBuffer,
                 caption: helpMessage,
                 footer: '© ReviewPlus Bot 2024',
-                templateButtons: templateButtons
+                buttons: buttons,
+                headerType: 4
             };
             
-            await sock.sendMessage(chatId, templateMessage);
+            await sock.sendMessage(chatId, buttonMessage);
         } else {
             console.error('Bot image not found at:', imagePath);
-            const templateMessage = {
+            const buttonMessage = {
                 text: helpMessage,
                 footer: '© ReviewPlus Bot 2024',
-                templateButtons: templateButtons
+                buttons: buttons,
+                headerType: 1
             };
             
-            await sock.sendMessage(chatId, templateMessage);
+            await sock.sendMessage(chatId, buttonMessage);
         }
     } catch (error) {
         console.error('Error in help command:', error);
