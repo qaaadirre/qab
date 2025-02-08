@@ -10,9 +10,7 @@ async function helpCommand(sock, chatId, channelLink) {
    by ${settings.botOwner || 'Khadr'}
    YT : ${global.ytch || 'ReviewPLus'}
 ╚═══════════════════╝
-
 *Available Commands:*
-
 ╔═══════════════════╗
 🌐 *Commands*:
 ║ ➤ .help or .menu
@@ -21,8 +19,14 @@ async function helpCommand(sock, chatId, channelLink) {
 ║ ➤ .owner
 ║ ➤ .vv
 ╚═══════════════════╝
-
 Join our channel for updates:`;
+
+    // Define the buttons
+    const buttons = [
+        { buttonId: 'button_a', buttonText: { displayText: 'A' }, type: 1 },
+        { buttonId: 'button_b', buttonText: { displayText: 'B' }, type: 1 },
+        { buttonId: 'button_c', buttonText: { displayText: 'C' }, type: 1 }
+    ];
 
     try {
         const imagePath = path.join(__dirname, '../assets/bot_image.jpg');
@@ -33,6 +37,9 @@ Join our channel for updates:`;
             await sock.sendMessage(chatId, {
                 image: imageBuffer,
                 caption: helpMessage,
+                footer: 'Click a button to continue',
+                buttons: buttons,
+                headerType: 4, // 4 is for image with buttons
                 contextInfo: {
                     forwardingScore: 999,
                     isForwarded: true,
@@ -47,12 +54,15 @@ Join our channel for updates:`;
             console.error('Bot image not found at:', imagePath);
             await sock.sendMessage(chatId, { 
                 text: helpMessage,
+                footer: 'Click a button to continue',
+                buttons: buttons,
+                headerType: 1, // 1 is for text with buttons
                 contextInfo: {
                     forwardingScore: 999,
                     isForwarded: true,
                     forwardedNewsletterMessageInfo: {
                         newsletterJid: '120363397497383483@newsletter',
-                        newsletterName: 'REviewPLus',
+                        newsletterName: 'REviewPlus',
                         serverMessageId: -1
                     } 
                 }
