@@ -21,12 +21,22 @@ async function helpCommand(sock, chatId, channelLink) {
 ╚═══════════════════╝
 Join our channel for updates:`;
 
-    // Define the buttons
+    // Define the buttons with more descriptive text
     const buttons = [
-        { buttonId: 'button_a', buttonText: { displayText: 'A' }, type: 1 },
-        { buttonId: 'button_b', buttonText: { displayText: 'B' }, type: 1 },
-        { buttonId: 'button_c', buttonText: { displayText: 'C' }, type: 1 }
+        { buttonId: 'id1', buttonText: { displayText: '👥 Group Info' }, type: 1 },
+        { buttonId: 'id2', buttonText: { displayText: '📜 Commands' }, type: 1 },
+        { buttonId: 'id3', buttonText: { displayText: '👤 Owner' }, type: 1 }
     ];
+
+    const buttonMessage = {
+        image: { url: 'https://example.com/bot.jpg' },  // Replace with your image URL
+        caption: helpMessage,
+        footer: '© ReviewPlus Bot 2024',
+        buttons: buttons,
+        headerType: 4,
+        viewOnce: true,
+        mentions: ['120363186063399611@g.us']  // Replace with your group ID
+    };
 
     try {
         const imagePath = path.join(__dirname, '../assets/bot_image.jpg');
@@ -37,35 +47,19 @@ Join our channel for updates:`;
             await sock.sendMessage(chatId, {
                 image: imageBuffer,
                 caption: helpMessage,
-                footer: 'Click a button to continue',
+                footer: '© ReviewPlus Bot 2024',
                 buttons: buttons,
-                headerType: 4, // 4 is for image with buttons
-                contextInfo: {
-                    forwardingScore: 999,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363397497383483@newsletter',
-                        newsletterName: 'ReviewPLus',
-                        serverMessageId: -1
-                    }
-                }
+                headerType: 4,
+                viewOnce: true
             });
         } else {
             console.error('Bot image not found at:', imagePath);
             await sock.sendMessage(chatId, { 
                 text: helpMessage,
-                footer: 'Click a button to continue',
+                footer: '© ReviewPlus Bot 2024',
                 buttons: buttons,
-                headerType: 1, // 1 is for text with buttons
-                contextInfo: {
-                    forwardingScore: 999,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363397497383483@newsletter',
-                        newsletterName: 'REviewPlus',
-                        serverMessageId: -1
-                    } 
-                }
+                headerType: 1,
+                viewOnce: true
             });
         }
     } catch (error) {
