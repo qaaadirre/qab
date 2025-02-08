@@ -29,7 +29,7 @@ Join our channel for updates:`;
     ];
 
     const buttonMessage = {
-        image: { url: 'https://example.com/bot.jpg' },  // Replace with your image URL
+        image: imagePath,  // Replace with your image URL
         caption: helpMessage,
         footer: '© ReviewPlus Bot 2024',
         buttons: buttons,
