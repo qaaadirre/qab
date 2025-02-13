@@ -35,9 +35,12 @@ const menuCategories = {
     }
 };
 
-async function helpCommand(sock, chatId, arg) {
-    if (!arg) {
-        // Show main help menu
+async function helpCommand(sock, chatId, arg = '') {
+    // Ensure arg is a string and trim it
+    const cleanArg = String(arg).trim();
+    
+    if (!cleanArg) {
+        // Show main help menu when no argument or just .help
         const helpMessage = `
 ┏━━━ *${settings.botName || 'ReviewPlus'}* ━━━┓
 ┃ Version: *${settings.version || '1.0.0'}*
@@ -80,6 +83,7 @@ ${Object.entries(menuCategories).map(([key, category]) => {
                     ...messageOptions
                 });
             } else {
+                console.error('Bot image not found at:', imagePath);
                 await sock.sendMessage(chatId, { 
                     text: helpMessage,
                     ...messageOptions
@@ -91,7 +95,7 @@ ${Object.entries(menuCategories).map(([key, category]) => {
         }
     } else {
         // Show specific category
-        const category = menuCategories[arg];
+        const category = menuCategories[cleanArg];
         if (category) {
             const categoryMessage = `
 ┏━━━ *${category.name}* ━━━┓
