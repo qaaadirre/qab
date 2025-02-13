@@ -132,10 +132,9 @@ async function showTimeSlots(sock, chatId) {
     const message = `
 *Available Time Slots:*
 
-${timeSlots.map(slot => `• ${slot}`).join('\n')}
+${timeSlots.map((slot, index) => `${index + 1}. ${slot}`).join('\n')}
 
-Please reply with your preferred time slot.
-Example: 09:00 AM`;
+Please reply with the time slot number to book.`;
 
     await sock.sendMessage(chatId, { text: message });
 }
