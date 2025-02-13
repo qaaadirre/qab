@@ -35,99 +35,81 @@ const menuCategories = {
     }
 };
 
-async function handleMenuSelection(sock, chatId, selection) {
-    const [category, command] = selection.split('.');
-    
-    if (!command) {
-        // Show commands for selected category
-        if (menuCategories[category]) {
-            return await showCategoryCommands(sock, chatId, category);
-        }
-    } else {
-        // Execute selected command
-        const categoryData = menuCategories[category];
-        const commandData = categoryData?.commands[command];
-        if (commandData) {
-            return await sock.sendMessage(chatId, { 
-                text: `Executing command: ${commandData.cmd}\n${commandData.desc}` 
-            });
-        }
-    }
-    
-    // Invalid selection, show main menu
-    return await showMainMenu(sock, chatId);
-}
-
-async function showCategoryCommands(sock, chatId, category) {
-    const categoryData = menuCategories[category];
-    let message = `
-┏━━━ *${categoryData.name}* ━━━┓\n\n`;
-
-    Object.entries(categoryData.commands).forEach(([key, value]) => {
-        message += `${category}.${key}. ${value.cmd} - ${value.desc}\n`;
-    });
-
-    message += `\n0. Return to main menu\n\nReply with number to select (e.g., "${category}.1")`;
-
-    await sock.sendMessage(chatId, { text: message });
-}
-
-async function showMainMenu(sock, chatId) {
-    const mainMessage = `
+async function helpCommand(sock, chatId, arg) {
+    if (!arg) {
+        // Show main help menu
+        const helpMessage = `
 ┏━━━ *${settings.botName || 'ReviewPlus'}* ━━━┓
 ┃ Version: *${settings.version || '1.0.0'}*
 ┃ Creator: ${settings.botOwner || 'Khadr'}
 ┗━━━━━━━━━━━━━━━━━━━━┛
 
-*Select a Category:*
+*Available Categories:*
 
-${Object.entries(menuCategories).map(([key, category]) => 
-    `${key}. ${category.name}`
+${Object.entries(menuCategories).map(([key, category]) => {
+    const commandList = Object.values(category.commands)
+        .map(cmd => `  ╰➽ ${cmd.cmd}`).join('\n');
+    return `${category.name}\n${commandList}`;
+}).join('\n\n')}
+
+💡 *How to use:*
+• Send .help <category_number> to view specific category
+• Example: .help 1 for Main Menu
+
+📢 Join our channel for updates!`;
+
+        try {
+            const imagePath = path.join(__dirname, '../assets/bot_image.jpg');
+            const messageOptions = {
+                caption: helpMessage,
+                contextInfo: {
+                    forwardingScore: 999,
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363397497383483@newsletter',
+                        newsletterName: 'ReviewPlus',
+                        serverMessageId: -1
+                    }
+                }
+            };
+
+            if (fs.existsSync(imagePath)) {
+                const imageBuffer = fs.readFileSync(imagePath);
+                await sock.sendMessage(chatId, {
+                    image: imageBuffer,
+                    ...messageOptions
+                });
+            } else {
+                await sock.sendMessage(chatId, { 
+                    text: helpMessage,
+                    ...messageOptions
+                });
+            }
+        } catch (error) {
+            console.error('Error in help command:', error);
+            await sock.sendMessage(chatId, { text: helpMessage });
+        }
+    } else {
+        // Show specific category
+        const category = menuCategories[arg];
+        if (category) {
+            const categoryMessage = `
+┏━━━ *${category.name}* ━━━┓
+
+${Object.entries(category.commands).map(([key, cmd]) => 
+    `╰➽ ${cmd.cmd} - ${cmd.desc}`
 ).join('\n')}
 
-Reply with number to select (e.g., "1")`;
+💡 Use these commands directly
+📢 Example: ${Object.values(category.commands)[0].cmd}`;
 
-    try {
-        const imagePath = path.join(__dirname, '../assets/bot_image.jpg');
-        const messageOptions = {
-            caption: mainMessage,
-            contextInfo: {
-                forwardingScore: 999,
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363397497383483@newsletter',
-                    newsletterName: 'ReviewPlus',
-                    serverMessageId: -1
-                }
-            }
-        };
-
-        if (fs.existsSync(imagePath)) {
-            const imageBuffer = fs.readFileSync(imagePath);
-            await sock.sendMessage(chatId, {
-                image: imageBuffer,
-                ...messageOptions
-            });
+            await sock.sendMessage(chatId, { text: categoryMessage });
         } else {
             await sock.sendMessage(chatId, { 
-                text: mainMessage,
-                ...messageOptions
+                text: '❌ Invalid category. Use .help to see all categories.' 
             });
         }
-    } catch (error) {
-        console.error('Error in menu command:', error);
-        await sock.sendMessage(chatId, { text: mainMessage });
     }
 }
 
-async function menuCommand(sock, chatId, arg) {
-    if (arg && arg.trim()) {
-        // Handle menu selection
-        await handleMenuSelection(sock, chatId, arg.trim());
-    } else {
-        // Show main menu
-        await showMainMenu(sock, chatId);
-    }
-}
-
-module.exports = helpCommand;   
+module.exports = helpCommand;
