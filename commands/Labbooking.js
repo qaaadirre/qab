@@ -1,7 +1,7 @@
 const { appendData } = require('./googleSheets');
 
 // Google Sheet ID and range
-const SPREADSHEET_ID = 'https://docs.google.com/spreadsheets/d/17-VrmiZQ7lcM7lIwS9LJ2kgTGiNs2qm4NpPlMA1jbF8/edit?usp=sharing'; // Replace with your Google Sheet ID
+const SPREADSHEET_ID = 'https://docs.google.com/spreadsheets/d/17-VrmiZQ7lcM7lIwS9LJ2kgTGiNs2qm4NpPlMA1jbF8/edit'; // Replace with your Google Sheet ID
 const RANGE = 'Sheet1!A1'; // Replace with your sheet name and range
 
 // Define available tests/services
