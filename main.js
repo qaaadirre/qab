@@ -220,6 +220,10 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 const mentionedJidListKick = message.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
                 await kickCommand(sock, chatId, senderId, mentionedJidListKick, message);
                 break;
+                
+                case userMessage.startsWith('.book'):
+        await labBookingCommand(sock, chatId, userMessage.slice(5).trim(), senderId);
+        break;
             case userMessage.startsWith('.mute'):
                 const muteDuration = parseInt(userMessage.split(' ')[1]);
                 if (isNaN(muteDuration)) {
