@@ -33,14 +33,18 @@ async function labBookingCommand(sock, chatId, arg = '', sender) {
 
     const state = userStates.get(userId);
 
+    console.log(`Current step: ${state.step}, User input: ${arg}`); // Debugging
+
     try {
         switch (state.step) {
             case 'start':
+                console.log('Showing main menu...'); // Debugging
                 await showMainMenu(sock, chatId);
                 state.step = 'select_service';
                 break;
 
             case 'select_service':
+                console.log('Processing service selection...'); // Debugging
                 if (labServices[arg]) {
                     state.service = labServices[arg];
                     await showDateSelection(sock, chatId);
@@ -85,7 +89,7 @@ async function labBookingCommand(sock, chatId, arg = '', sender) {
                     userStates.delete(userId);
                 }
                 break;
-        }
+     }
     } catch (error) {
         console.error('Error in lab booking:', error);
         await sock.sendMessage(chatId, { text: '⚠️ An error occurred. Please try again by typing .book' });
