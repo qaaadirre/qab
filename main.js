@@ -10,6 +10,7 @@ const fetch = require('node-fetch');
 
 // Command imports
 const tagAllCommand = require('./commands/tagall');
+const labBookingCommand = require('./commands/Labbooking');
 const helpCommand = require('./commands/help');
 const banCommand = require('./commands/ban');
 const { promoteCommand } = require('./commands/promote');
