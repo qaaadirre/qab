@@ -35,14 +35,24 @@ const menuCategories = {
     }
 };
 
+async function sendMessageWithRetry(sock, chatId, content, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            await sock.sendMessage(chatId, content);
+            return true;
+        } catch (error) {
+            console.error(`Attempt ${i + 1} failed:`, error);
+            if (i === retries - 1) throw error;
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+        }
+    }
+}
+
 async function helpCommand(sock, chatId, arg = '') {
-    // Ensure arg is a string and trim it
-    const cleanArg = String(arg).trim();
-    
-    if (!cleanArg) {
-        // Show main help menu when no argument or just .help
-        const helpMessage = `
-┏━━━ *${settings.botName || 'ReviewPlus'}* ━━━┓
+    try {
+        console.log('Help command called with arg:', arg);
+        const mainHelpMessage = `
+┏━━━ *${settings.botName || 'ReviewPlus Bot'}* ━━━┓
 ┃ Version: *${settings.version || '1.0.0'}*
 ┃ Creator: ${settings.botOwner || 'Khadr'}
 ┗━━━━━━━━━━━━━━━━━━━━┛
@@ -52,7 +62,7 @@ async function helpCommand(sock, chatId, arg = '') {
 ${Object.entries(menuCategories).map(([key, category]) => {
     const commandList = Object.values(category.commands)
         .map(cmd => `  ╰➽ ${cmd.cmd}`).join('\n');
-    return `${category.name}\n${commandList}`;
+    return `${key}. ${category.name}\n${commandList}`;
 }).join('\n\n')}
 
 💡 *How to use:*
@@ -61,57 +71,46 @@ ${Object.entries(menuCategories).map(([key, category]) => {
 
 📢 Join our channel for updates!`;
 
+        const messageOptions = {
+            text: mainHelpMessage,
+            contextInfo: {
+                forwardingScore: 999,
+                isForwarded: true,
+                forwardedNewsletterMessageInfo: {
+                    newsletterJid: '120363397497383483@newsletter',
+                    newsletterName: 'ReviewPlus',
+                    serverMessageId: -1
+                }
+            }
+        };
+
+        // Try to send with image first, fallback to text
         try {
             const imagePath = path.join(__dirname, '../assets/bot_image.jpg');
-            const messageOptions = {
-                caption: helpMessage,
-                contextInfo: {
-                    forwardingScore: 999,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363397497383483@newsletter',
-                        newsletterName: 'ReviewPlus',
-                        serverMessageId: -1
-                    }
-                }
-            };
-
             if (fs.existsSync(imagePath)) {
                 const imageBuffer = fs.readFileSync(imagePath);
-                await sock.sendMessage(chatId, {
-                    image: imageBuffer,
-                    ...messageOptions
-                });
-            } else {
-                console.error('Bot image not found at:', imagePath);
-                await sock.sendMessage(chatId, { 
-                    text: helpMessage,
-                    ...messageOptions
-                });
+                messageOptions.image = imageBuffer;
+                messageOptions.caption = mainHelpMessage;
+                delete messageOptions.text;
             }
         } catch (error) {
-            console.error('Error in help command:', error);
-            await sock.sendMessage(chatId, { text: helpMessage });
+            console.error('Error loading image:', error);
+            // Continue with text-only message
         }
-    } else {
-        // Show specific category
-        const category = menuCategories[cleanArg];
-        if (category) {
-            const categoryMessage = `
-┏━━━ *${category.name}* ━━━┓
 
-${Object.entries(category.commands).map(([key, cmd]) => 
-    `╰➽ ${cmd.cmd} - ${cmd.desc}`
-).join('\n')}
+        // Send the message with retry mechanism
+        await sendMessageWithRetry(sock, chatId, messageOptions);
 
-💡 Use these commands directly
-📢 Example: ${Object.values(category.commands)[0].cmd}`;
-
-            await sock.sendMessage(chatId, { text: categoryMessage });
-        } else {
-            await sock.sendMessage(chatId, { 
-                text: '❌ Invalid category. Use .help to see all categories.' 
-            });
+    } catch (error) {
+        console.error('Error in help command:', error);
+        // Fallback to simple text message
+        const fallbackMessage = {
+            text: '⚠️ An error occurred. Please try again later or contact the bot owner.'
+        };
+        try {
+            await sendMessageWithRetry(sock, chatId, fallbackMessage);
+        } catch (finalError) {
+            console.error('Critical error in help command:', finalError);
         }
     }
 }
