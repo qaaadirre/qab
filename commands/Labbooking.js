@@ -1,4 +1,4 @@
-const { appendData } = require('./googleSheets');
+/* const { appendData } = require('./googleSheets');
 
 // Google Sheet ID and range
 const SPREADSHEET_ID = '17-VrmiZQ7lcM7lIwS9LJ2kgTGiNs2qm4NpPlMA1jbF8'; // Only the ID part
@@ -231,3 +231,207 @@ function isValidDate(dateStr) {
 }
 
 module.exports = labBookingCommand;
+
+*/
+
+const { appendData } = require('./googleSheets'); // Ensure this function is implemented to save data to Google Sheets
+
+// Google Sheet ID and range
+const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID'; // Replace with your Google Sheet ID
+const RANGE = 'Sheet1!A1';
+
+// Define available tests/services
+const labServices = {
+    '1': { name: 'Blood Test', price: '500' },
+    '2': { name: 'X-Ray', price: '1000' },
+    '3': { name: 'MRI Scan', price: '5000' },
+    '4': { name: 'CT Scan', price: '3000' },
+    '5': { name: 'ECG', price: '800' },
+};
+
+// Time slots available
+const timeSlots = [
+    '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM',
+    '11:00 AM', '11:30 AM', '12:00 PM', '02:00 PM',
+    '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM',
+];
+
+// User booking states
+const userStates = new Map();
+
+async function labBookingCommand(sock, chatId, arg = '', sender) {
+    const userId = sender.split('@')[0];
+
+    if (!userStates.has(userId)) {
+        userStates.set(userId, { step: 'start' });
+    }
+
+    const state = userStates.get(userId);
+    console.log(`Current step: ${state.step}, User input: ${arg}`);
+
+    try {
+        switch (state.step) {
+            case 'start':
+                await showMainMenu(sock, chatId);
+                state.step = 'select_service';
+                break;
+
+            case 'select_service':
+                if (labServices[arg]) {
+                    state.service = labServices[arg];
+                    await showDateSelection(sock, chatId);
+                    state.step = 'select_date';
+                } else {
+                    await sock.sendMessage(chatId, { 
+                        text: '❌ Invalid service. Please select from the menu below:',
+                        footer: 'Select a service',
+                        buttons: createServiceButtons(),
+                        headerType: 1
+                    });
+                }
+                break;
+
+            case 'select_date':
+                if (isValidDate(arg)) {
+                    state.date = arg;
+                    await showTimeSlots(sock, chatId);
+                    state.step = 'select_time';
+                } else {
+                    await sock.sendMessage(chatId, { text: '❌ Invalid date format. Please use DD-MM-YYYY' });
+                }
+                break;
+
+            case 'select_time':
+                if (timeSlots.includes(arg)) {
+                    state.time = arg;
+                    await requestContactInfo(sock, chatId);
+                    state.step = 'provide_contact';
+                } else {
+                    await sock.sendMessage(chatId, {
+                        text: '❌ Invalid time slot. Please select from available slots:',
+                        footer: 'Select a time slot',
+                        buttons: createTimeButtons(),
+                        headerType: 1
+                    });
+                }
+                break;
+
+            case 'provide_contact':
+                state.contact = arg;
+                await confirmBooking(sock, chatId, state);
+                state.step = 'confirm';
+                break;
+
+            case 'confirm':
+                if (arg.toLowerCase() === 'yes') {
+                    await saveBookingToSheet(state);
+                    await sock.sendMessage(chatId, { text: '✅ Your booking has been confirmed! Here are the details:\n' +
+                        `Service: ${state.service.name}\n` +
+                        `Date: ${state.date}\n` +
+                        `Time: ${state.time}\n` +
+                        `Contact: ${state.contact}` });
+                    userStates.delete(userId); // Clear user state after booking
+                } else {
+                    await sock.sendMessage(chatId, { text: '❌ Booking canceled. If you want to book again, type .book' });
+                    userStates.delete(userId); // Clear user state
+                }
+                break;
+
+            default:
+                await sock.sendMessage(chatId, { text: '❓ Something went wrong. Please start over by typing .book' });
+                userStates.delete(userId); // Clear user state
+                break;
+        }
+    } catch (error) {
+        console.error('Error handling booking:', error);
+        await sock.sendMessage(chatId, { text: '❌ An error occurred. Please try again later.' });
+        userStates.delete(userId); // Clear user state
+    }
+}
+
+async function showMainMenu(sock, chatId) {
+    const menuText = 'Welcome to the Lab Booking System! Please select a service:';
+    await sock.sendMessage(chatId, {
+        text: menuText,
+        footer: 'Select a service',
+        buttons: createServiceButtons(),
+        headerType: 1
+    });
+}
+
+async function showDateSelection(sock, chatId) {
+    await sock.sendMessage(chatId, { text: 'Please enter the date for your appointment (DD-MM-YYYY):' });
+}
+
+async function showTimeSlots(sock, chatId) {
+    const timeText = 'Please select a time slot:';
+    await sock.sendMessage(chatId, {
+        text: timeText,
+        footer: 'Select a time slot',
+        buttons: createTimeButtons(),
+        headerType: 1
+    });
+}
+
+async function requestContactInfo(sock, chatId) {
+    await sock.sendMessage(chatId, { text: 'Please provide your contact number:' });
+}
+
+async function confirmBooking(sock, chatId, state) {
+    const confirmationText = `Please confirm your booking:\n` +
+        `Service: ${state.service.name}\n` +
+        `Date: ${state.date}\n` +
+        `Time: ${state.time}\n` +
+        `Contact: ${state.contact}\n` +
+        `Type 'yes' to confirm or 'no' to cancel.`;
+    await sock.sendMessage(chatId, { text: confirmationText });
+}
+
+function isValidDate(dateString) {
+    const regex = /^\d{2}-\d{2}-\d{4}$/;
+    return regex.test(dateString);
+}
+
+function createServiceButtons() {
+    return Object.entries(labServices).map(([key, service]) => ({
+        buttonId: key,
+        buttonText: { displayText: `${service.name} - ₹${service.price}` },
+        type: 1
+    }));
+}
+
+function createTimeButtons() {
+    return timeSlots.map(slot => ({
+        buttonId: slot,
+        buttonText: { displayText: slot },
+        type: 1
+    }));
+}
+
+async function saveBookingToSheet(state) {
+    const bookingData = [
+        state.service.name,
+        state.date,
+        state.time,
+        state.contact
+    ];
+    await appendData(SPREADSHEET_ID, RANGE, bookingData);
+}
+
+client.on('message', async (message) => {
+    const chatId = message.from;
+    const sender = message.sender.id;
+    const command = message.body.trim().toLowerCase();
+
+    if (command === '.book') {
+        await labBookingCommand(client, chatId, '', sender);
+    } else {
+        const userId = sender.split('@')[0];
+        if (userStates.has(userId)) {
+            await labBookingCommand(client, chatId, command, sender);
+        }
+    }
+});
+module.exports = labBookingCommand;
+
+client.initialize();
