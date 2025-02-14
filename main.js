@@ -221,7 +221,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 await kickCommand(sock, chatId, senderId, mentionedJidListKick, message);
                 break;
                 
-            case userMessage.startsWith('.book'):
+            case userMessage.startsWith('Book'):
                 await labBookingCommand(sock, chatId, userMessage.slice(5).trim(), senderId);
                 break;
 
