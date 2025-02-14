@@ -256,9 +256,9 @@ const timeSlots = [
 // User booking states
 const userStates = new Map();
 
-async function labBookingCommand(sock, chatId, arg = '', sender) {
-    const userId = sender.split('@')[0];
-
+async function labBookingCommand(sock, msg, arg = '') {
+    const userId = msg.key.remoteJid;
+    
     if (!userStates.has(userId)) {
         userStates.set(userId, { step: 'start' });
     }
@@ -269,30 +269,28 @@ async function labBookingCommand(sock, chatId, arg = '', sender) {
     try {
         switch (state.step) {
             case 'start':
-                await showMainMenu(sock, chatId);
+                await showMainMenu(sock, msg);
                 state.step = 'select_service';
                 break;
 
             case 'select_service':
                 if (labServices[arg]) {
                     state.service = labServices[arg];
-                    await showDateSelection(sock, chatId);
+                    await showDateSelection(sock, msg);
                     state.step = 'select_date';
                 } else {
-                    await sock.sendMessage(chatId, {
-                        text: '❌ Invalid service. Please select from the menu below.'
-                    });
-                    await showMainMenu(sock, chatId);
+                    await sock.sendMessage(msg.key.remoteJid, { text: '❌ Invalid service. Please select a number from 1-5.' });
+                    await showMainMenu(sock, msg);
                 }
                 break;
 
             case 'select_date':
                 if (isValidDate(arg)) {
                     state.date = arg;
-                    await showTimeSlots(sock, chatId);
+                    await showTimeSlots(sock, msg);
                     state.step = 'select_time';
                 } else {
-                    await sock.sendMessage(chatId, { text: '❌ Invalid date format. Please use DD-MM-YYYY' });
+                    await sock.sendMessage(msg.key.remoteJid, { text: '❌ Invalid date format. Please use DD-MM-YYYY' });
                 }
                 break;
 
@@ -300,108 +298,93 @@ async function labBookingCommand(sock, chatId, arg = '', sender) {
                 const timeIndex = parseInt(arg) - 1;
                 if (timeIndex >= 0 && timeIndex < timeSlots.length) {
                     state.time = timeSlots[timeIndex];
-                    await requestContactInfo(sock, chatId);
+                    await requestContactInfo(sock, msg);
                     state.step = 'provide_contact';
                 } else {
-                    await sock.sendMessage(chatId, { text: '❌ Invalid selection. Please choose a number from the list.' });
-                    await showTimeSlots(sock, chatId);
+                    await sock.sendMessage(msg.key.remoteJid, { text: '❌ Invalid selection. Please choose a number from 1-12.' });
+                    await showTimeSlots(sock, msg);
                 }
                 break;
 
             case 'provide_contact':
                 state.contact = arg;
-                await confirmBooking(sock, chatId, state);
+                await confirmBooking(sock, msg, state);
                 state.step = 'confirm';
                 break;
 
             case 'confirm':
                 if (arg.toLowerCase() === 'yes') {
-                    await saveBooking(sock, chatId, state);
+                    await saveBooking(sock, msg, state);
                     userStates.delete(userId);
                 } else if (arg.toLowerCase() === 'no') {
-                    await sock.sendMessage(chatId, { 
-                        text: '❌ Booking cancelled. Type *.book* to start again.'
-                    });
+                    await sock.sendMessage(msg.key.remoteJid, { text: '❌ Booking cancelled. Type *.book* to start again.' });
                     userStates.delete(userId);
                 } else {
-                    await sock.sendMessage(chatId, { text: '❌ Please reply with *yes* or *no*' });
+                    await sock.sendMessage(msg.key.remoteJid, { text: '❌ Please reply with *yes* or *no*' });
                 }
                 break;
         }
     } catch (error) {
         console.error('Error in lab booking:', error);
-        await sock.sendMessage(chatId, { 
-            text: '⚠️ An error occurred. Type *.book* to try again.'
-        });
+        await sock.sendMessage(msg.key.remoteJid, { text: '⚠️ An error occurred. Type *.book* to try again.' });
         userStates.delete(userId);
     }
 }
 
-async function showMainMenu(sock, chatId) {
-    const sections = [{
-        title: "Available Services",
-        rows: Object.entries(labServices).map(([key, service]) => ({
-            title: service.name,
-            description: `Price: ₹${service.price} | Duration: ${service.duration}`,
-            rowId: key
-        }))
-    }];
+async function showMainMenu(sock, msg) {
+    const menuText = `
+📋 *Lab Booking System*
 
-    const listMessage = {
-        text: "*📋 Lab Booking System*\n\nPlease select a service from the list below:",
-        footer: "Tap on 'Select Service' to view options",
-        title: "Lab Services",
-        buttonText: "Select Service",
-        sections
-    };
+*Available Services:*
+${Object.entries(labServices).map(([key, service]) =>
+        `${key}. ${service.name}
+   💰 Price: ₹${service.price}
+   ⌚ Duration: ${service.duration}`
+    ).join('\n\n')}
 
-    await sock.sendMessage(chatId, { list: listMessage });
+Reply with the service number (1-5) to proceed.`;
+
+    await sock.sendMessage(msg.key.remoteJid, { text: menuText });
 }
 
-async function showDateSelection(sock, chatId) {
-    const message = `📅 *Select Appointment Date*
+async function showDateSelection(sock, msg) {
+    const message = `
+📅 *Select Appointment Date*
 
 Please enter your preferred date in DD-MM-YYYY format
 Example: 14-02-2025
 
 Note: You can book appointments for the next 30 days only.`;
 
-    await sock.sendMessage(chatId, { text: message });
+    await sock.sendMessage(msg.key.remoteJid, { text: message });
 }
 
-async function showTimeSlots(sock, chatId) {
-    const sections = [{
-        title: "Available Time Slots",
-        rows: timeSlots.map((slot, index) => ({
-            title: slot,
-            rowId: (index + 1).toString()
-        }))
-    }];
+async function showTimeSlots(sock, msg) {
+    const slotsText = `
+⌚ *Available Time Slots*
 
-    const listMessage = {
-        text: "⌚ *Select Time Slot*\n\nPlease choose your preferred time:",
-        footer: "Tap on 'Select Time' to view options",
-        title: "Time Slots",
-        buttonText: "Select Time",
-        sections
-    };
+${timeSlots.map((slot, index) => `${index + 1}. ${slot}`).join('\n')}
 
-    await sock.sendMessage(chatId, { list: listMessage });
+Reply with the slot number (1-${timeSlots.length}) to proceed.`;
+
+    await sock.sendMessage(msg.key.remoteJid, { text: slotsText });
 }
 
-async function requestContactInfo(sock, chatId) {
-    const message = `👤 *Enter Contact Information*
+async function requestContactInfo(sock, msg) {
+    const message = `
+👤 *Enter Contact Information*
 
 Please provide the following details in this format:
 Name, Age, Phone Number
 
 Example: John Doe, 30, 9876543210`;
 
-    await sock.sendMessage(chatId, { text: message });
+    await sock.sendMessage(msg.key.remoteJid, { text: message });
 }
 
-async function confirmBooking(sock, chatId, state) {
-    const message = `📝 *Confirm Booking Details*
+async function confirmBooking(sock, msg, state) {
+    const message = `
+📝 *Confirm Booking Details*
 
 Service: ${state.service.name}
 Date: ${state.date}
@@ -411,10 +394,10 @@ Contact: ${state.contact}
 
 Reply *yes* to confirm or *no* to cancel.`;
 
-    await sock.sendMessage(chatId, { text: message });
+    await sock.sendMessage(msg.key.remoteJid, { text: message });
 }
 
-async function saveBooking(sock, chatId, state) {
+async function saveBooking(sock, msg, state) {
     const [name, age, phone] = state.contact.split(',').map(item => item.trim());
     const bookingId = `BK${Date.now()}`;
     const bookingData = [
@@ -434,7 +417,8 @@ async function saveBooking(sock, chatId, state) {
     try {
         await appendData(SPREADSHEET_ID, RANGE, bookingData);
 
-        const message = `🎉 *Booking Confirmed!*
+        const message = `
+🎉 *Booking Confirmed!*
 
 Booking ID: ${bookingId}
 Service: ${state.service.name}
@@ -448,12 +432,10 @@ Thank you for choosing our services! 🙏
 
 Type *.book* to make another booking.`;
 
-        await sock.sendMessage(chatId, { text: message });
+        await sock.sendMessage(msg.key.remoteJid, { text: message });
     } catch (error) {
         console.error('Error saving booking:', error);
-        await sock.sendMessage(chatId, { 
-            text: '⚠️ Failed to save booking. Type *.book* to try again.'
-        });
+        await sock.sendMessage(msg.key.remoteJid, { text: '⚠️ Failed to save booking. Type *.book* to try again.' });
     }
 }
 
