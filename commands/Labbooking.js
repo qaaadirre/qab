@@ -237,7 +237,7 @@ module.exports = labBookingCommand;
 const { appendData } = require('./googleSheets'); // Ensure this function is implemented to save data to Google Sheets
 
 // Google Sheet ID and range
-const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID'; // Replace with your Google Sheet ID
+const SPREADSHEET_ID = '17-VrmiZQ7lcM7lIwS9LJ2kgTGiNs2qm4NpPlMA1jbF8'; // Replace with your Google Sheet ID
 const RANGE = 'Sheet1!A1';
 
 // Define available tests/services
