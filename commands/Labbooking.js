@@ -1,7 +1,7 @@
- const { appendData } = require('./googleSheets');
+const { appendData } = require('./googleSheets');
 
 // Google Sheet ID and range
-const SPREADSHEET_ID = 'https://docs.google.com/spreadsheets/d/17-VrmiZQ7lcM7lIwS9LJ2kgTGiNs2qm4NpPlMA1jbF8/edit';
+const SPREADSHEET_ID = '17-VrmiZQ7lcM7lIwS9LJ2kgTGiNs2qm4NpPlMA1jbF8'; // Only the ID part
 const RANGE = 'Sheet1!A1';
 
 // Define available tests/services
@@ -111,14 +111,14 @@ async function labBookingCommand(sock, chatId, arg = '', sender) {
 
 function createServiceButtons() {
     return Object.entries(labServices).map(([key, service]) => ({
-        buttonId: key,
+        buttonId : key,
         buttonText: { displayText: `${service.name} - ₹${service.price}` },
         type: 1
     }));
 }
 
 function createTimeButtons() {
-    return timeSlots.map((slot, index) => ({
+    return timeSlots.map((slot) => ({
         buttonId: slot,
         buttonText: { displayText: slot },
         type: 1
@@ -129,7 +129,8 @@ async function showMainMenu(sock, chatId) {
     const message = {
         text: `*📋 Lab Booking System*\n\nPlease select a service:`,
         footer: 'Select a service',
-        buttons: createServiceButtons()
+        buttons: createServiceButtons(),
+        headerType: 1
     };
 
     await sock.sendMessage(chatId, message);
@@ -148,7 +149,8 @@ async function showTimeSlots(sock, chatId) {
     const message = {
         text: `⌚ *Select Time Slot*\n\nPlease choose your preferred time:`,
         footer: 'Select a time slot',
-        buttons: createTimeButtons()
+        buttons: createTimeButtons(),
+        headerType: 1
     };
 
     await sock.sendMessage(chatId, message);
@@ -170,7 +172,8 @@ async function confirmBooking(sock, chatId, state) {
         buttons: [
             { buttonId: 'yes', buttonText: { displayText: 'Yes' }, type: 1 },
             { buttonId: 'no', buttonText: { displayText: 'No' }, type: 1 }
-        ]
+        ],
+        headerType: 1
     };
 
     await sock.sendMessage(chatId, message);
@@ -227,4 +230,4 @@ function isValidDate(dateStr) {
     return date >= today && date <= thirtyDaysFromNow;
 }
 
-module.exports = labBookingCommand;
+module.exports = labBooking
