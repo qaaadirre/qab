@@ -47,9 +47,7 @@ async function labBookingCommand(sock, chatId, arg = '', sender) {
                     state.step = 'select_date';
                 } else {
                     await sock.sendMessage(chatId, { 
-                        text: '❌ Invalid service. Please select from the menu below:',
-                        footer: 'Select a service',
-                        buttons: createServiceButtons()
+                        text: '❌ Invalid service. Please select from the menu below:\n' + createServiceMenu()
                     });
                 }
                 break;
@@ -71,9 +69,7 @@ async function labBookingCommand(sock, chatId, arg = '', sender) {
                     state.step = 'provide_contact';
                 } else {
                     await sock.sendMessage(chatId, {
-                        text: '❌ Invalid time slot. Please select from available slots:',
-                        footer: 'Select a time slot',
-                        buttons: createTimeButtons()
+                        text: '❌ Invalid time slot. Please select from available slots:\n' + createTimeMenu()
                     });
                 }
                 break;
@@ -90,9 +86,7 @@ async function labBookingCommand(sock, chatId, arg = '', sender) {
                     userStates.delete(userId);
                 } else {
                     await sock.sendMessage(chatId, { 
-                        text: '❌ Booking cancelled. Press the button below to start again.',
-                        footer: 'Book Again',
-                        buttons: [{ buttonId: '.book', buttonText: { displayText: 'Book New Appointment' }, type: 1 }]
+                        text: '❌ Booking cancelled. Type ".book" to start again.'
                     });
                     userStates.delete(userId);
                 }
@@ -101,36 +95,23 @@ async function labBookingCommand(sock, chatId, arg = '', sender) {
     } catch (error) {
         console.error('Error in lab booking:', error);
         await sock.sendMessage(chatId, { 
-            text: '⚠️ An error occurred. Press the button below to try again.',
-            footer: 'Try Again',
-            buttons: [{ buttonId: '.book', buttonText: { displayText: 'Book New Appointment' }, type: 1 }]
+            text: '⚠️ An error occurred. Type ".book" to try again.'
         });
         userStates.delete(userId);
     }
 }
 
-function createServiceButtons() {
-    return Object.entries(labServices).map(([key, service]) => ({
-        buttonId: key,
-        buttonText: { displayText: `${service.name} - ₹${service.price}` },
-        type: 1
-    }));
+function createServiceMenu() {
+    return Object.entries(labServices).map(([key, service]) => `${key}. ${service.name} - ₹${service.price}`).join('\n');
 }
 
-function createTimeButtons() {
-    return timeSlots.map((slot) => ({
-        buttonId: slot,
-        buttonText: { displayText: slot },
-        type: 1
-    }));
+function createTimeMenu() {
+    return timeSlots.map((slot, index) => `${index + 1}. ${slot}`).join('\n');
 }
 
 async function showMainMenu(sock, chatId) {
     const message = {
-        text: `*📋 Lab Booking System*\n\nPlease select a service:`,
-        footer: 'Select a service',
-        buttons: createServiceButtons(),
-        headerType: 1
+        text: `*📋 Lab Booking System*\n\nPlease select a service by typing the corresponding number:\n${createServiceMenu()}`,
     };
 
     await sock.sendMessage(chatId, message);
@@ -139,7 +120,6 @@ async function showMainMenu(sock, chatId) {
 async function showDateSelection(sock, chatId) {
     const message = {
         text: `📅 *Select Appointment Date*\n\nPlease enter your preferred date (DD-MM-YYYY)\nExample: 14-02-2025\n\nNote: You can book appointments for the next 30 days only.`,
-        footer: 'Enter date in DD-MM-YYYY format'
     };
 
     await sock.sendMessage(chatId, message);
@@ -147,10 +127,7 @@ async function showDateSelection(sock, chatId) {
 
 async function showTimeSlots(sock, chatId) {
     const message = {
-        text: `⌚ *Select Time Slot*\n\nPlease choose your preferred time:`,
-        footer: 'Select a time slot',
-        buttons: createTimeButtons(),
-        headerType: 1
+        text: `⌚ *Select Time Slot*\n\nPlease choose your preferred time by typing the corresponding number:\n${createTimeMenu()}`,
     };
 
     await sock.sendMessage(chatId, message);
@@ -159,7 +136,6 @@ async function showTimeSlots(sock, chatId) {
 async function requestContactInfo(sock, chatId) {
     const message = {
         text: `👤 *Enter Contact Information*\n\nPlease provide the following details in this format:\nName, Age, Phone Number\n\nExample: John Doe, 30, 9876543210`,
-        footer: 'Enter your details'
     };
 
     await sock.sendMessage(chatId, message);
@@ -167,13 +143,7 @@ async function requestContactInfo(sock, chatId) {
 
 async function confirmBooking(sock, chatId, state) {
     const message = {
-        text: `*📝 Confirm Booking Details*\n\nService: ${state.service.name}\nDate: ${state.date}\nTime: ${state.time}\nPrice: ₹${state.service.price}\nContact: ${state.contact}\n\nPress Yes to confirm or No to cancel.`,
-        footer: 'Confirm booking',
-        buttons: [
-            { buttonId: 'yes', buttonText: { displayText: 'Yes' }, type: 1 },
-            { buttonId: 'no', buttonText: { displayText: 'No' }, type: 1 }
-        ],
-        headerType: 1
+        text: `*📝 Confirm Booking Details*\n\nService: ${state.service.name}\nDate: ${state.date}\nTime: ${state.time}\nPrice: ₹${state.service.price}\nContact: ${state.contact}\n\nType "yes" to confirm or "no" to cancel.`,
     };
 
     await sock.sendMessage(chatId, message);
@@ -201,17 +171,13 @@ async function saveBooking(sock, chatId, state) {
 
         const message = {
             text: `🎉 *Booking Confirmed!*\n\nBooking ID: ${bookingId}\nService: ${state.service.name}\nDate: ${state.date}\nTime: ${state.time}\n\nPlease arrive 15 minutes before your appointment.\nFor cancellation, contact our helpdesk.\n\nThank you for choosing our services! 🙏`,
-            footer: 'Book another appointment',
-            buttons: [{ buttonId: '.book', buttonText: { displayText: 'Book New Appointment' }, type: 1 }]
         };
 
         await sock.sendMessage(chatId, message);
     } catch (error) {
         console.error('Error saving booking:', error);
         await sock.sendMessage(chatId, { 
-            text: '⚠️ Failed to save booking. Please try again.',
-            footer: 'Try Again',
-            buttons: [{ buttonId: '.book', buttonText: { displayText: 'Book New Appointment' }, type: 1 }]
+            text: '⚠️ Failed to save booking. Please try again.'
         });
     }
 }
