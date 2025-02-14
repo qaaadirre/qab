@@ -1,4 +1,4 @@
-* const { appendData } = require('./googleSheets');
+const { appendData } = require('./googleSheets');
 
 // Google Sheet ID and range
 const SPREADSHEET_ID = '17-VrmiZQ7lcM7lIwS9LJ2kgTGiNs2qm4NpPlMA1jbF8'; // Only the ID part
@@ -111,7 +111,7 @@ async function labBookingCommand(sock, chatId, arg = '', sender) {
 
 function createServiceButtons() {
     return Object.entries(labServices).map(([key, service]) => ({
-        buttonId : key,
+        buttonId: key,
         buttonText: { displayText: `${service.name} - ₹${service.price}` },
         type: 1
     }));
