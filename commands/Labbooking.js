@@ -230,4 +230,4 @@ function isValidDate(dateStr) {
     return date >= today && date <= thirtyDaysFromNow;
 }
 
-module.exports = labBooking
+module.exports = labBookingCommand;
