@@ -1,4 +1,4 @@
-const { appendData } = require('./googleSheets'); // Ensure this is your Google Sheets integration
+/* const { appendData } = require('./googleSheets'); // Ensure this is your Google Sheets integration
 const { makeWASocket, useMultiFileAuthState , MessageType } = require('@whiskeysockets/baileys');
 
 // Google Sheet ID and range
@@ -200,5 +200,122 @@ function isValidDate(dateStr) {
 
     return date >= today && date <= thirtyDaysFromNow;
 }
+
+module.exports = labBookingCommand;
+*/
+const { makeWASocket, useMultiFileAuthState, proto } = require('@whiskeysockets/baileys');
+
+// Define available tests/services
+const labServices = {
+    '1': { name: 'Blood Test', price: '500', duration: '30 mins' },
+    '2': { name: 'X-Ray', price: '1000', duration: '15 mins' },
+    '3': { name: 'MRI Scan', price: '5000', duration: '45 mins' },
+    '4': { name: 'CT Scan', price: '3000', duration: '30 mins' },
+    '5': { name: 'ECG', price: '800', duration: '20 mins' },
+};
+
+// Time slots available
+const timeSlots = [
+    '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM',
+    '11:00 AM', '11:30 AM', '12:00 PM', '02:00 PM',
+    '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM',
+];
+
+// User booking states
+const userStates = new Map();
+
+async function labBookingCommand(sock, chatId, arg = '', sender) {
+    const userId = sender.split('@')[0];
+
+    if (!userStates.has(userId)) {
+        userStates.set(userId, { step: 'start' });
+    }
+
+    const state = userStates.get(userId);
+    console.log(`Current step: ${state.step}, User input: ${arg}`);
+
+    try {
+        switch (state.step) {
+            case 'start':
+                await showMainMenu(sock, chatId);
+                state.step = 'select_service';
+                break;
+
+            case 'select_service':
+                if (arg.startsWith('service_')) {
+                    const serviceIndex = parseInt(arg.split('_')[1]);
+                    state.service = labServices[serviceIndex + 1]; // Adjust for 1-based index
+                    await showDateSelection(sock, chatId);
+                    state.step = 'select_date';
+                } else {
+                    await showMainMenu(sock, chatId);
+                }
+                break;
+
+            case 'select_date':
+                if (isValidDate(arg)) {
+                    state.date = arg;
+                    await showTimeSlots(sock, chatId);
+                    state.step = 'select_time';
+                } else {
+                    await sock.sendMessage(chatId, { text: '❌ Invalid date format. Please use DD-MM-YYYY' });
+                }
+                break;
+
+            case 'select_time':
+                if (arg.startsWith('time_')) {
+                    const timeIndex = parseInt(arg.split('_')[1]);
+                    state.time = timeSlots[timeIndex];
+                    await requestContactInfo(sock, chatId);
+                    state.step = 'provide_contact';
+                } else {
+                    await showTimeSlots(sock, chatId);
+                }
+                break;
+
+            case 'provide_contact':
+                state.contact = arg;
+                await confirmBooking(sock, chatId, state);
+                state.step = 'confirm';
+                break;
+
+            case 'confirm':
+                if (arg.toLowerCase() === 'yes') {
+                    await saveBooking(sock, chatId, state);
+                    userStates.delete(userId);
+                } else {
+                    await sock.sendMessage(chatId, { text: '❌ Booking cancelled. Type ".book" to start again.' });
+                    userStates.delete(userId);
+                }
+                break;
+        }
+    } catch (error) {
+        console.error('Error in lab booking:', error);
+        await sock.sendMessage(chatId, { text: '⚠️ An error occurred. Type ".book" to try again.' });
+        userStates.delete(userId);
+    }
+}
+
+function createServiceButtons() {
+    return Object.entries(labServices).map(([key, service]) => ({
+        buttonId: `service_${key - 1}`, // Adjust for 0-based index
+        buttonText: { displayText: `${service.name} - ₹${service.price}` },
+        type: 1,
+    }));
+}
+
+async function showMainMenu(sock, chatId) {
+    const buttons = createServiceButtons();
+    const message = {
+        text: `*📋 Lab Booking System*\n\nPlease select a service:`,
+        footer: 'Tap a button to select',
+        buttons,
+        headerType: 1
+    };
+
+    await sock.sendMessage(chatId, message);
+}
+
+// Other functions...
 
 module.exports = labBookingCommand;
