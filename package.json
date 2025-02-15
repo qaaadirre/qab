@@ -15,7 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@adiwajshing/baileys": "^6.8.0",
+    "@adiwajshing/baileys": "^6.8.0", // Updated to the latest version
     "@adiwajshing/keyed-db": "^0.2.4",
     "@distube/ytdl-core": "^4.15.9",
     "@ffmpeg/ffmpeg": "^0.12.15",
