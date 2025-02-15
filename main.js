@@ -222,8 +222,8 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 break;
                 
             case userMessage.startsWith('.book'):
-                await labBookingCommand(sock, chatId, userMessage.slice(5).trim(), senderId);
-                break;
+    await labBookingCommand(sock, chatId, userMessage.slice(5).trim(), senderId);
+    break;
 
             case userMessage.startsWith('.mute'):
                 const muteDuration = parseInt(userMessage.split(' ')[1]);
