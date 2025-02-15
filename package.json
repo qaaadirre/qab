@@ -61,6 +61,8 @@
     "ws": "^8.17.1",
     "yargs-parser": "^21.1.1",
     "youtube-yts": "^2.0.0",
+    "googleapis": "^120.0.0",
+    "xlsx": "^0.18.5",
     "youtubedl-core": "^4.11.5",
     "ytdl-core": "^4.11.5"
   }
