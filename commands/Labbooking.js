@@ -200,6 +200,7 @@ module.exports = labBookingCommand;
 
 */
 const { appendData } = require('./googleSheets'); // Ensure this is your Google Sheets integration
+const { MessageType } = require('@adiwajshing/baileys');
 
 // Google Sheet ID and range
 const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID'; // Replace with your actual ID
@@ -327,7 +328,7 @@ async function showMainMenu(sock, chatId) {
         headerType: 1,
     };
 
-    await sock.sendMessage(chatId, message);
+    await sock.sendMessage(chatId, message, MessageType.buttonsMessage);
 }
 
 async function showDateSelection(sock, chatId) {
@@ -345,7 +346,7 @@ async function showTimeSlots(sock, chatId) {
         headerType: 1,
     };
 
-    await sock.sendMessage(chatId, message);
+    await sock.sendMessage(chatId, message, MessageType.buttonsMessage);
 }
 
 async function requestContactInfo(sock, chatId) {
