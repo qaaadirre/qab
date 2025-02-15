@@ -64,7 +64,6 @@
     "googleapis": "^120.0.0",
     "xlsx": "^0.18.5",
     "youtubedl-core": "^4.11.5",
-    "ytdl-core": "^4.11.5",
-  "@adiwajshing/baileys": "5.0.0"
+    "ytdl-core": "^4.11.5"
   }
 }
