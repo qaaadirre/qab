@@ -17,7 +17,7 @@
   "dependencies": {
     "googleapis": "^120.0.0",
     "@adiwajshing/keyed-db": "^0.2.4",
-    "@adiwajshing/baileys": "^6.7.9",
+    "@adiwajshing/baileys": "^6.7.8",
     "@distube/ytdl-core": "^4.15.9",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@hapi/boom": "^10.0.1",
