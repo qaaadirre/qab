@@ -3,6 +3,7 @@ FROM node:18-slim
 WORKDIR /app
 
 # Install required packages
+RUN npm i @adiwajshing/baileys
 RUN apt-get update && \
     apt-get install -y \
     git \
@@ -23,6 +24,7 @@ COPY . .
 # Create session directory with full permissions
 RUN mkdir -p session && \
     chmod -R 777 session
+    
 
 # Start the bot
 CMD ["node", "index.js"]
