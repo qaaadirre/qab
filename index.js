@@ -91,6 +91,24 @@ async function startXeonBotInc() {
 
     store.bind(XeonBotInc.ev)
 
+    XeonBotInc.ev.on('messages.upsert', async (chatUpdate) => {
+    const mek = chatUpdate.messages[0];
+    if (!mek.message) return;
+
+    // Check if the message is a button interaction
+    if (mek.message.buttonsResponseMessage) {
+        const buttonId = mek.message.buttonsResponseMessage.selectedButtonId;
+        const chatId = mek.key.remoteJid;
+        const senderId = mek.key.fromMe ? XeonBotInc.user.id : mek.key.participant;
+
+        // Pass the buttonId to the labBookingCommand
+        await labBookingCommand(XeonBotInc, chatId, buttonId, senderId);
+        return;
+    }
+
+    // Existing message handling logic...
+});
+
     // Message handling
     XeonBotInc.ev.on('messages.upsert', async chatUpdate => {
         try {
