@@ -1,5 +1,5 @@
 const { appendData } = require('./googleSheets'); // Ensure this is your Google Sheets integration
-const { MessageType } = require('@adiwajshing/baileys');
+const { makeWASocket, useMultiFileAuthState , MessageType } = require('@adiwajshing/baileys');
 
 // Google Sheet ID and range
 const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID'; // Replace with your actual ID
