@@ -3,7 +3,6 @@ FROM node:18-slim
 WORKDIR /app
 
 # Install required packages
-RUN npm i @adiwajshing/baileys
 RUN apt-get update && \
     apt-get install -y \
     git \
